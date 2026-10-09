@@ -1,35 +1,51 @@
-# Network Traffic Analyzer (CLI)
+# net-analyzer
 
-A network traffic and packet analyzer developed in Python.
+A tiny packet sniffer for the terminal. Point it at an interface, give it a BPF filter, watch the packets roll by.
+
+Built in Python on top of [scapy](https://scapy.net/).
 
 ## Features
 
-- Real-time network packet capture
-- Detailed protocol analysis (TCP, UDP, ICMP, etc.)
-- Text-based traffic data display in the terminal
-- Packet filtering by protocol, IP address, port, etc.
-- Network traffic statistics
-
-## Installation
-
-1. Clone the repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run the application: `python src/main.py [options]`
+- Live capture on any interface, with standard BPF filters (`tcp port 443`, `host 10.0.0.1`, …)
+- Per-layer decoding: Ethernet, IP, TCP (with flags), UDP, ICMP, ARP
+- Color-coded output by protocol
+- Stats at the end: protocols, top talkers, ports
+- Optional `.pcap` export, ready to open in Wireshark
 
 ## Usage
 
-```
-python src/main.py --interface eth0 --filter "tcp" --count 100
+```bash
+pip install -r requirements.txt
+
+# list interfaces
+python src/main.py --list-interfaces
+
+# 100 TCP packets on eth0, displayed live
+sudo python src/main.py -i eth0 -f "tcp" -c 100 -l
+
+# capture for 30s and save to a pcap
+sudo python src/main.py -i eth0 -t 30 -o capture.pcap
 ```
 
-Or with specific options:
+| Flag | Description |
+|---|---|
+| `-i, --interface` | Interface to capture on |
+| `-f, --filter` | BPF filter |
+| `-c, --count` | Number of packets (0 = unlimited) |
+| `-t, --timeout` | Capture duration in seconds (0 = unlimited) |
+| `-o, --output` | Save packets to a `.pcap` file |
+| `-l, --live` | Print packets as they arrive |
+| `--list-interfaces` | Show available interfaces |
+
+Packet capture needs root / admin privileges.
+
+## Layout
 
 ```
-python src/main.py -i eth0 -f "tcp" -c 100
+src/
+├── main.py              # CLI entry point
+├── capture/             # sniffing + pcap export
+├── analyzer/            # per-protocol decoding and stats
+├── cli/                 # terminal display
+└── utils/               # interfaces, filter validation, helpers
 ```
-
-## Prerequisites
-
-- Python 3.8+
-- Administrator privileges (for packet capture)
-- Libraries: scapy, pyshark, argparse, colorama (for colored terminal output)
